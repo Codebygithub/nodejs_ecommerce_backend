@@ -1,15 +1,22 @@
 'use strict';
 
+const { Created } = require("../core/success.response");
 const AccessService = require("../services/access.serverice");
 
 class AccessController {
+   login = async (req, res,next) => {
+        new Created({
+                message: 'Success login',
+                metadata: await AccessService.login(req.body)
+        }).send(res)
+
+   }    
    signUp = async (req,res,next) => {
-        try {
-            console.log('[P]:::signUp: ', req.body)
-            return res.status(201).json(await AccessService.signUp(req.body))
-        } catch (error) {
-            next(error);
-        }
+           new Created({
+            message: ' Successfully Registered' , 
+            metadata: await AccessService.signUp(req.body)
+           }).send(res)
+       
    }
 }
 

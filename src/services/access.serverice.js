@@ -5,7 +5,9 @@ const bcrypt = require('bcrypt')
 const crypto = require('crypto');
 const KeyTokenService = require("./keyToken.service");
 const { createTokenPair } = require("../auth/authUtils");
-const {getInfoData}= require("../utils")
+const {getInfoData}= require("../utils");
+const { BadRequestError, UnauthoriedError } = require("../core/error.response");
+const { findByEmail } = require("./shop.service");
 const RoleShop = {
     SHOP:1,
     WRITER:2,
@@ -14,47 +16,40 @@ const RoleShop = {
 }
 class AccessService {
 
+    
+
     static signUp = async ({name,email,password}) => {
-        try {
+        
+            //find user email
             const holderShop = await shopModel.findOne({email}).lean()
             if(holderShop)  {
-                return {
-                    code:'xxxx',
-                    message:'Shop already registered'
-                }
+                throw new BadRequestError('Error: Shop already exists')
 
             }
             const passwordHash = await bcrypt.hash(password,10);
+
+            //create user account
             const newShop = await shopModel.create({
                 name , email , password:passwordHash , roles:[RoleShop.SHOP]
             })
             if(newShop) {
-                const {privateKey , publicKey} = crypto.generateKeyPairSync('rsa',{
-                    modulusLength:4096,
-                    publicKeyEncoding:{ 
-                        type:'pkcs1',
-                        format:'pem'
-                    },
-                    privateKeyEncoding:{ 
-                        type:'pkcs1',
-                        format:'pem'
-                    }
-                })
-                console.log({privateKey , publicKey})
 
-                const publicKeyString = await KeyTokenService.createKeyToken({
+                //random string by crypto
+               
+               const privateKey = crypto.randomBytes(64).toString('hex')
+               const publicKey = crypto.randomBytes(64).toString('hex')
+
+                const keyStore= await KeyTokenService.createKeyToken({
                     userId:newShop._id,
-                    publicKey
+                    publicKey,
+                    privateKey
                 })
-                if(!publicKeyString) 
+                if(!keyStore) 
                 {
-                    return {
-                        code:'xxx',
-                        message:'publicKeyString error'
-                    }
+                    throw new BadRequestError('Error: Key Store failed to be created')
+
                 }
-                const publicKeyObject = crypto.createPublicKey(publicKeyString)
-                const tokens = await createTokenPair({userId:newShop._id,email},publicKeyObject,privateKey)
+                const tokens = await createTokenPair({userId:newShop._id,email},publicKey,privateKey)
                 console.log('created Token' , tokens)
                 return {
                     code:201,
@@ -68,13 +63,37 @@ class AccessService {
                 code:200 ,
                 metadata:null
             }
-        } catch (error) {
-            return {
-                code:'xxx',
-                message:error.message,
-                status:'error'
-            }
+        
+    }
+    static login = async ({email, password , refreshToken = null}) => {
+        const foundShop = await findByEmail({email})
+        if(!foundShop) {
+            throw new BadRequestError('Shop not registered')
         }
+        const matchPassword = bcrypt.compare(password , foundShop.password)
+        if(!matchPassword) {
+            throw new UnauthoriedError('Password mismatch')
+        }
+
+        const privateKey = crypto.randomBytes(65).toString('hex')
+        const publicKey = crypto.randomBytes(65).toString('hex')
+
+        const tokens = await createTokenPair({userId:foundShop._id,email},publicKey,privateKey)
+
+        await KeyTokenService.createKeyToken({
+            refreshToken:tokens.refreshToken,
+            publicKey , privateKey
+            
+        })
+        return {
+            shop:getInfoData({fileds:['_id','name','email'],object:foundShop}) ,
+            tokens
+        }
+        
+
+
+
+
     }
 }
 module.exports = AccessService
