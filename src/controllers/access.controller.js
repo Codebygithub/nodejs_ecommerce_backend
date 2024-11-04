@@ -18,6 +18,18 @@ class AccessController {
            }).send(res)
        
    }
+   logout = async (req, res , next) => {
+        new Created({
+                message:'Successfully Log out' ,
+                metadata:await AccessService.logout({keyStore:req.keyStore})
+        })     
+   }
+   handleRefreshToken = async (req,res,next) => {
+        new Created({
+                message: 'Succesfully Refresh Token' ,
+                metadata:await AccessService.handleRefreshToken(req.body.refreshToken)
+        })
+   }
 }
 
 module.exports = new AccessController();

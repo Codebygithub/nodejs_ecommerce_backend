@@ -1,6 +1,8 @@
 'use strict';
 
 const keytokenModel = require("../models/keytoken.model");
+const {Types} = require('mongoose')
+const JWT = require('jsonwebtoken')
 
 class KeyTokenService {
     static createKeyToken = async ({userId , publicKey , privateKey,refreshToken}) => {
@@ -26,6 +28,23 @@ class KeyTokenService {
         
         
 
+        }
+        static findByUserId = async (userId) => {
+            return await keytokenModel.findOne({user:Types.ObjectId(userId)})
+            
+        }
+        static removeById = async (id) => {
+            return await keytokenModel.remove(id);
+        }
+        static findByRefreshTokenUsed = async (refreshToken) => {
+            return await keytokenModel.findOne({refreshTokensUsed:refreshToken})
+        }
+        static findByRefreshToken = async (refreshToken) => {
+            return await keytokenModel.findOne({refreshToken})
+        }
+        
+        static removeKeyStore = async(userId) => {
+            return await keytokenModel.deleteOne({user:userId})
         }
     }
     
