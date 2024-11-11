@@ -28,7 +28,7 @@ class AccessController {
         new Created({
                 message: 'Succesfully Refresh Token' ,
                 metadata:await AccessService.handleRefreshToken({refreshToken:req.refreshToken, user:req.user , keyStore:req.keyStore})
-        })
+        }).send(res)
    }
 }
 

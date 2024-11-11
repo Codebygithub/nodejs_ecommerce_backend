@@ -8,8 +8,10 @@ const router = express.Router()
 
 
 
-//AUTHENTICATION
-// router.use(authentication)
 
-// router.post('', asyncHandler(ProductController.createProduct))
+
+//AUTHENTICATION
+router.use(authentication)
+
+router.post('', asyncHandler(ProductController.createProduct))
 module.exports = router
