@@ -1,7 +1,7 @@
-const { BadRequestError } = require('../core/error.response');
-const { product , electronic , clothing } = require('../models/product.model')
+const { BadRequestError, ForbiddenError } = require('../core/error.response');
+const { product , electronic , clothing, funiture } = require('../models/product.model')
 
-
+const {findAllDraftsForShop} = require('../repository/product_repo')
 
 class ProductFactory {
     static async createProduct(type,payload) {
@@ -10,7 +10,15 @@ class ProductFactory {
                 return new Electronics(payload).createProduct()
             case 'Clothing' :
                 return new Clothing(payload).createProduct()
+            case 'Funiture':
+                return new Funiture(payload).createProduct()
+            default :
+                throw new ForbiddenError('Invalid type')
         }
+    }
+    static async findAllDraftsForShop ({product_shop , limit = 50 , skip = 0 }){
+        const query = {product_shop , isDraft:true}
+        return await findAllDraftsForShop({query,limit,skip})
     }
 }
 class Product {
@@ -39,7 +47,7 @@ class Product {
 }
 class Clothing extends Product {
     async createProduct() {
-        const newClothing = await electronic.create({
+        const newClothing = await clothing.create({
             ...this.product_attributes,
             product_shop:this.product_shop
         });
@@ -56,6 +64,19 @@ class Electronics extends Product {
             product_shop:this.product_shop
         });
         if(!newClothing) throw new BadRequestError('create new electronic error');
+        const newProduct = await super.createProduct(newClothing._id);
+        if(!newProduct) throw new BadRequestError('create new product error');
+        return newProduct;
+    }
+}
+
+class Funiture extends Product {
+    async createProduct() {
+        const newClothing = await funiture.create({
+            ...this.product_attributes,
+            product_shop:this.product_shop
+        });
+        if(!newClothing) throw new BadRequestError('create new funiture error');
         const newProduct = await super.createProduct(newClothing._id);
         if(!newProduct) throw new BadRequestError('create new product error');
         return newProduct;

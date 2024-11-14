@@ -14,4 +14,7 @@ const router = express.Router()
 router.use(authentication)
 
 router.post('', asyncHandler(ProductController.createProduct))
+
+//QUERY
+router.get('/drafts/all', asyncHandler(ProductController.getAllDraftsForShop))
 module.exports = router
