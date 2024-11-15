@@ -14,9 +14,19 @@ class ProductController {
                 product_shop:req.user.userId
             })
         }).send(res)
+
+        
+    }
+    publishProductByShop = async(req,res,next) =>{
+        new Created({
+            message: 'publishProductByShop Successfully',
+            
+            metadata: await ProductService.publishProductByShop({
+                product_id: req.params,
+                product_shop:req.user.userId
+            })
+        }).send(res) 
     ///END POST
-       
-    } 
 
     /**
      * @desc get all drafts for shop
@@ -25,6 +35,9 @@ class ProductController {
      * @return {JSON}
      */
     ////QUERY
+   
+    ///END QUERY
+    }
     getAllDraftsForShop = async(req,res,next) => {
         new Created({
             message: 'getAllDraftsForShop Successfully',
@@ -33,6 +46,13 @@ class ProductController {
             })
         }).send(res)
     }
-    ///END QUERY
+    getAllPublishForShop = async(req,res,next) => {
+        new Created({
+            message: 'getAllPublishForShop Successfully',
+            metadata: await ProductService.findAllPublishForShop({
+                product_shop:req.user.userId
+        })
+    }).send(res)
+}
 }
 module.exports = new ProductController

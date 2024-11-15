@@ -1,7 +1,7 @@
 const { BadRequestError, ForbiddenError } = require('../core/error.response');
 const { product , electronic , clothing, funiture } = require('../models/product.model')
 
-const {findAllDraftsForShop} = require('../repository/product_repo')
+const {findAllDraftsForShop,publishProductByShop,findAllPublishsForShop} = require('../repository/product_repo')
 
 class ProductFactory {
     static async createProduct(type,payload) {
@@ -19,6 +19,14 @@ class ProductFactory {
     static async findAllDraftsForShop ({product_shop , limit = 50 , skip = 0 }){
         const query = {product_shop , isDraft:true}
         return await findAllDraftsForShop({query,limit,skip})
+    }
+    static async findAllPublishForShop ({product_shop , limit = 50 , skip = 0 }){
+        const query = {product_shop , isPublished:true}
+        return await findAllPublishsForShop({query,limit,skip})
+    }
+    static async publishProductByShop({product_shop ,product_id}){
+        return await publishProductByShop({product_shop ,product_id})
+
     }
 }
 class Product {
