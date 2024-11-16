@@ -9,12 +9,14 @@ const router = express.Router()
 
 
 
+router.get('/search/:keySearch', asyncHandler(ProductController.searchProductByUser))
 
 //AUTHENTICATION
 router.use(authentication)
 
 router.post('', asyncHandler(ProductController.createProduct))
 router.post('/publish/:id', asyncHandler(ProductController.publishProductByShop))
+router.post('/unpublish/:id', asyncHandler(ProductController.unPublishProductByShop))
 //QUERY
 router.get('/drafts/all', asyncHandler(ProductController.getAllDraftsForShop))
 router.get('/publish/all', asyncHandler(ProductController.getAllPublishForShop))

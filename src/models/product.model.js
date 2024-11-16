@@ -35,6 +35,7 @@ const ProductSchema = new Schema({
         collection:COLLECTION_NAME
     }
 )
+ProductSchema.index({product_name:'text',product_description:'text'})
 ProductSchema.pre('save', function (next) {
     this.product_slug = slugify(this.product_name ,{lower:true})
     next();
