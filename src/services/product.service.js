@@ -12,17 +12,18 @@ const {
 } = require('../repository/product_repo')
 
 class ProductFactory {
+    static productRegisTry = {}
+
+    static registerProductType(type , classRef){
+        ProductFactory.productRegisTry[type] = classRef
+    }
+
+
     static async createProduct(type,payload) {
-        switch (type) {
-            case 'Electronics' :
-                return new Electronics(payload).createProduct()
-            case 'Clothing' :
-                return new Clothing(payload).createProduct()
-            case 'Funiture':
-                return new Funiture(payload).createProduct()
-            default :
-                throw new ForbiddenError('Invalid type')
-        }
+        const productClass = ProductFactory.productRegisTry[type]
+        if(!productClass) throw new BadRequestError('Invalid type')
+        return new productClass(payload).createProduct()
+       
     }
     static async findAllDraftsForShop ({product_shop , limit = 50 , skip = 0 }){
         const query = {product_shop , isDraft:true}
@@ -111,5 +112,7 @@ class Funiture extends Product {
         return newProduct;
     }
 }
-
+ProductFactory.registerProductType('Electronics',Electronics)
+ProductFactory.registerProductType('Clothing',Clothing)
+ProductFactory.registerProductType('Funiture',Funiture)
 module.exports = ProductFactory;
