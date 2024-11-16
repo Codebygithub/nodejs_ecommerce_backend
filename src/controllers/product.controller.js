@@ -53,12 +53,21 @@ class ProductController {
 
 ////QUERY
 
-searchProductByUser = async (req,res,next) => {
-    new Created({
-        message: 'searchProductByUser Successfully',
+    searchProductByUser = async (req,res,next) => {
+        new Created({
+            message: 'searchProductByUser Successfully',
         
-        metadata: await ProductService.searchProductByUser(
-            req.params
+            metadata: await ProductService.searchProductByUser(
+                req.params
+        )
+    }).send(res) 
+}
+    findAllProduct= async (req,res,next) => {
+        new Created({
+            message: 'findAllProduct Successfully',
+        
+            metadata: await ProductService.findAllProduct(
+                req.query
         )
     }).send(res) 
 }

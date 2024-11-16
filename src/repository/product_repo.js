@@ -1,7 +1,7 @@
 'use-strict'
 const { Types } = require('mongoose')
 const {product , electronic , clothing , funiture} = require('../models/product.model')
-
+const {getSelectData,unGetSelectData} = require('../utils/index')
 const findAllDraftsForShop = async({query , limit , skip}) => {
    return await queryProduct({query, limit,skip})
 }
@@ -42,6 +42,19 @@ const searchProductByUser = async ({keySearch}) => {
         console.log('rs')
         return rs; 
 }
+const findAllProduct = async({limit , sort ,  page , filter ,select}) => {
+    const skip = (page - 1 ) * limit
+    const sortBy = sort === 'ctime' ? {_id:-1} : {_id:1}
+    const products = await product.find(filter)
+    .skip(skip)
+    .sort(sortBy)
+    .limit(limit)
+    .select(getSelectData(select))
+    .lean()
+
+    return products
+
+}
 const queryProduct = async ({query,limit,skip}) => {
     return await product.find(query)
     .populate('product_shop','name email -_id')
@@ -56,5 +69,6 @@ module.exports ={
     findAllPublishsForShop,
     publishProductByShop,
     unPublishProductByShop,
-    searchProductByUser
+    searchProductByUser,
+    findAllProduct
 }
