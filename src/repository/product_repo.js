@@ -55,6 +55,9 @@ const findAllProduct = async({limit , sort ,  page , filter ,select}) => {
     return products
 
 }
+const findProduct = async({product_id , unselect}) => {
+    return await product.findById(product_id).select(unGetSelectData(unselect))
+}
 const queryProduct = async ({query,limit,skip}) => {
     return await product.find(query)
     .populate('product_shop','name email -_id')
@@ -70,5 +73,6 @@ module.exports ={
     publishProductByShop,
     unPublishProductByShop,
     searchProductByUser,
-    findAllProduct
+    findAllProduct,
+    findProduct
 }

@@ -11,6 +11,7 @@ const router = express.Router()
 
 router.get('/search/:keySearch', asyncHandler(ProductController.searchProductByUser))
 router.get('/', asyncHandler(ProductController.findAllProduct))
+router.get('/:product_id', asyncHandler(ProductController.findProduct))
 
 //AUTHENTICATION
 router.use(authentication)

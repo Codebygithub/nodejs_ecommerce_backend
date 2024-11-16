@@ -61,7 +61,7 @@ class ProductController {
                 req.params
         )
     }).send(res) 
-}
+    }
     findAllProduct= async (req,res,next) => {
         new Created({
             message: 'findAllProduct Successfully',
@@ -70,11 +70,22 @@ class ProductController {
                 req.query
         )
     }).send(res) 
-}
-getAllDraftsForShop = async(req,res,next) => {
-    new Created({
-        message: 'getAllDraftsForShop Successfully',
-        metadata: await ProductService.findAllDraftsForShop({
+    }
+    findProduct= async (req,res,next) => {
+        new Created({
+            message: 'findProduct Successfully',
+        
+            metadata: await ProductService.findProduct({
+                product_id:req.params.product_id
+            }
+        )
+        }).send(res) 
+    }
+
+    getAllDraftsForShop = async(req,res,next) => {
+        new Created({
+            message: 'getAllDraftsForShop Successfully',
+            metadata: await ProductService.findAllDraftsForShop({
                 product_shop:req.user.userId
             })
         }).send(res)
