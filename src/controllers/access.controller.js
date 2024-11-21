@@ -1,7 +1,7 @@
 'use strict';
 
 const { Created } = require("../core/success.response");
-const AccessService = require("../services/access.serverice");
+const AccessService = require("../services/access.service");
 
 class AccessController {
    login = async (req, res,next) => {

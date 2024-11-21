@@ -14,11 +14,12 @@ const discountSchema = new Schema({
     discount_end_Date:{type:Date,required:true},
     discount_max_uses:{type:Number,required:true},
     discount_users_count:{type:Number,required:true},
+    discount_max_value:{type:Number,required:true},
     discount_users_used:{type:Array,default:[]},
     discount_max_uses_per_user:{type:Number,required:true},
     discount_min_order_value:{type:Number,required:true},
     discount_shopId:{type:Schema.Types.ObjectId,required:true},
-    discont_is_active:{type:Boolean,default:true},
+    discount_is_active:{type:Boolean,default:true},
     discount_applies_to:{type:String,required:true,enum:['all','specific']},
     discount_product_ids:{type:Array,default:[]}
 },
