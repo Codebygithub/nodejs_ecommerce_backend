@@ -50,7 +50,7 @@ const findAllProduct = async({limit , sort ,  page , filter ,select}) => {
     .sort(sortBy)
     .limit(limit)
     .select(getSelectData(select))
-    .lean()
+    
 
     return products
 

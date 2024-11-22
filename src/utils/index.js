@@ -7,9 +7,11 @@ const getInfoData = ({fileds = [] , object = {}}) => {
 }
 
 const convertoObjectId = id =>  new Types.ObjectId(id)
-const getSelectData = (select=[]) => {
-    return Object.fromEntries(select.map(el => [el,1]))
-}
+const getSelectData = (select = []) => {
+    if (!select || !Array.isArray(select)) return '';
+    return select.join(' '); 
+};
+
 
 const unGetSelectData = (select=[]) => {
     return Object.fromEntries(select.map(el => [el,0]))
