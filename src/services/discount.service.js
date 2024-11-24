@@ -48,7 +48,7 @@ class DiscountService {
             discount_uses_count:uses_count,
             discount_users_used:users_used,
             discount_type:type,
-            discount_shopid:shopId,
+            discount_shopId:shopId,
             discount_max_uses_per_users:max_uses_per_user,
             discount_is_active:is_active,
             discount_applies_to:applies_to,
@@ -119,42 +119,62 @@ class DiscountService {
         return updateDiscount;
 
     }
-    static async getAllDiscountCodesWithProduct({
-        code,shopId,userId , limit , page
-    }) {
+    static async getAllDiscountCodesWithProduct({ code, shopId, userId, limit, page }) {
+        console.log('Received query:', { code, shopId, limit, page });
+    
+        // Tìm discount trong database
         const foundDiscount = await discount.findOne({
-            discount_code:code,
-            discount_shopId:convertoObjectId(shopId)
-        }).lean()
-        if(!foundDiscount || !foundDiscount.discount_is_active) throw new NotFound('Discount not exist')
-        const {discount_applies_to , discount_product_ids} = foundDiscount
-        let products ;
-        if(discount_applies_to === 'all') {
-            products = await findAllProduct({
-                filter:{
-                    product_shop:convertoObjectId(shopId),
-                    isPublished:true
-                },
-                limit:+limit,
-                page:+page,
-                sort:'ctime',
-                select:['product_name']
-            })
+            discount_code: code,
+            discount_shopId: convertoObjectId(shopId),
+        }).lean();
+    
+        console.log('Found Discount:', foundDiscount);
+    
+        if (!foundDiscount || !foundDiscount.discount_is_active) {
+            throw new NotFound('Discount does not exist or is inactive');
         }
-        if(discount_applies_to === 'specific') {
+    
+        const { discount_applies_to, discount_product_ids } = foundDiscount;
+        let products;
+    
+        // Nếu áp dụng cho tất cả sản phẩm
+        if (discount_applies_to === 'all') {
             products = await findAllProduct({
-                filter:{
-                    _id:{$in:discount_product_ids},
-                    isPublished:true
+                filter: {
+                    product_shop: convertoObjectId(shopId),
+                    isPublished: true,
                 },
-                limit:+limit,
-                page:+page,
-                sort:'ctime',
-                select:['product_name']
-            })
+                limit: +limit,
+                page: +page,
+                sort: 'ctime',
+                select: ['product_name'],
+            });
         }
-        return products
-    }  
+    
+        // Nếu áp dụng cho sản phẩm cụ thể
+        if (discount_applies_to === 'specific') {
+            const productIds = discount_product_ids.map(id => convertoObjectId(id))
+            products = await findAllProduct({
+                filter: {
+                    _id: { $in: productIds },
+                    isPublished: true,
+                },
+                limit: +limit,
+                page: +page,
+                sort: 'ctime',
+                select: ['product_name'],
+            });
+        }
+    
+        console.log('Found Products:', products);
+    
+        if (!products || products.length === 0) {
+            throw new NotFound('No products found for the given discount');
+        }
+    
+        return products;
+    }
+    
     static async getAllDiscountCodesByShop({
         limit , page , shopId
     }) {

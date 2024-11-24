@@ -1,5 +1,6 @@
 const DiscountService = require('../services/discount.service')
 const { Created } = require("../core/success.response");
+const { NotFound } = require('../core/error.response');
 
 
 class DiscountController {
@@ -48,9 +49,11 @@ class DiscountController {
         }).send(res)
     }
     getAllDiscountCodesWithProduct = async(req,res,next)=>{
+        const metadata = await DiscountService.getAllDiscountCodesWithProduct({...req.query})
+        if(!metadata || metadata.length ===0) throw new NotFound('No products found for the given discount code');
         new Created({
             message: ' Successfully code found',
-            metadata: await DiscountService.getAllDiscountCodesWithProduct({...req.query})
+            metadata
         }).send(res)
     }
     
