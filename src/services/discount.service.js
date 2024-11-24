@@ -182,7 +182,7 @@ class DiscountService {
             limit:+limit ,
             page:+page,
             filter:{
-                discount_shopid:convertoObjectId(shopId),
+                discount_shopId:convertoObjectId(shopId),
                 discount_is_active:true
             },
             unSelect:['__v','discount_shopId'],

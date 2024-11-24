@@ -55,8 +55,16 @@ class DiscountController {
             message: ' Successfully code found',
             metadata
         }).send(res)
+        
     }
-    
+    getAllDiscountCodesByShop = async(req,res,next)=>{
+        const metadata = await DiscountService.getAllDiscountCodesByShop({...req.query})
+        if(!metadata || metadata.length ===0) throw new NotFound('No products found for the given discount code');
+        new Created({
+            message: ' Successfully code found',
+            metadata
+        }).send(res)
+    }
     ///END QUERY
 }
 module.exports = new DiscountController

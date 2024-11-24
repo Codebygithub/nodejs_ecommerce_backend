@@ -16,7 +16,7 @@ router.get('/list_product_code',asyncHandler(DiscountController.getAllDiscountCo
 router.use(authentication)
 
 router.post('', asyncHandler(DiscountController.createDiscount))
-router.get('', asyncHandler(DiscountController.getAllDiscountCodesWithProduct))
+router.get('', asyncHandler(DiscountController.getAllDiscountCodesByShop))
 router.patch('/update/:discountId', asyncHandler(DiscountController.updateDiscount))
 router.delete('/:codeId', asyncHandler(DiscountController.deleteDiscount))
 module.exports = router
