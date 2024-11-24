@@ -2,7 +2,7 @@
 
 const {BadRequestError, NotFound} = require('../core/error.response')
 const {discount} = require('../models/discount.model')
-const {convertoObjectId} = require('../utils');
+const {convertoObjectId, remmoveUndefinedObject, updateNestedObjectParser} = require('../utils');
 const { findAllProduct } = require('../repository/product_repo');
 const {findAllDiscountCodesUnSelect , findAllDiscountCodesSelect , checkDiscountExists} = require('../repository/discount_repo')
 class DiscountService {
@@ -93,7 +93,7 @@ class DiscountService {
                 throw new BadRequestError('Discount code already exists and is active');
             }
         }
-        const updateData = {
+        let updateData = {
             ...(name && { discount_name: name }),
             ...(description && { discount_description: description }),
             ...(code && { discount_code: code }),
@@ -108,6 +108,8 @@ class DiscountService {
             ...(applies_to && { discount_applies_to: applies_to }),
             ...(applies_to === 'specific' && product_ids && { discount_product_ids: product_ids }),
         };
+        updateData = remmoveUndefinedObject(updateData)
+        updateData = updateNestedObjectParser(updateData)
         const updateDiscount = await discount.findByIdAndUpdate(
             discountId,
             updateData,
