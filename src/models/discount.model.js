@@ -4,7 +4,7 @@ const {Schema ,Types, model}= require('mongoose'); // Erase if already required
 const DOCUMENT_NAME ='Discount'
 const COLLECTION_NAME ='discounts'
 // Declare the Schema of the Mongo model
-const inventorySchema = new Schema({
+const discountSchema = new Schema({
    discount_name:{type:String ,required:true},
    discount_description:{type:String,required:true},
    discount_type:{type:String,default:'fixed_amount'},
@@ -33,5 +33,5 @@ const inventorySchema = new Schema({
 
 //Export the model
 module.exports ={
-    inventory:model(DOCUMENT_NAME, inventorySchema)
+    discount:model(DOCUMENT_NAME, discountSchema)
 } 
