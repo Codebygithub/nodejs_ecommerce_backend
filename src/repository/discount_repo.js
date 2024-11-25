@@ -28,7 +28,7 @@ const findAllDiscountCodesSelect = async({limit , sort ,  page , filter ,select 
     return discounts
 
 }
-const checkDiscountExists = async (model,filter) => {
+const checkDiscountExists = async ({model,filter}) => {
     return await model.findOne(filter).lean()
 }
 module.exports = {

@@ -190,62 +190,52 @@ class DiscountService {
         })
         return discounts
     }
-    static async getDiscountAmount({
-        codeId,userId,shopId,products
-    }) {
-        const foundDiscount = await checkDiscountExists({
-            model:discount,
-            filter:{
-                discount_code:codeId,
-                discount_shopId:convertoObjectId(shopId),
-            }
+    static async getDiscountAmount({code , shopId , userId , products = []}) {
+        const foundDiscount = await discount.findOne({
+            discount_code:code,
+            discount_shopId:convertoObjectId(shopId),
+            discount_is_active:true ,
+            discount_start_date:{$lte:new Date()},
+            discount_end_date:{$gte:new Date()},
         })
-        if(!foundDiscount) throw new NotFound(` discount not found: ${discount_code}`)
-        const {
-            discount_is_active,
-            discount_max_uses,
-            discount_start_date,
-            discount_end_date,
-            discount_min_order_value,
-            discount_max_uses_per_user,
-            discount_users_used,
-            discount_type,
-            discount_value
-            ,
-        } = foundDiscount
-        if(!discount_is_active)  throw new NotFound(` discount is active`)
-        if(!discount_max_uses)  throw new NotFound(` discount max uses`)
-        if(new Date() < new Date(discount_start_date) || new Date() > new Date(discount_end_date) ) throw new NotFound(` discount date `)
-        let totalOrder
-        if(discount_min_order_value > 0 )
-        {
-            totalOrder= products.reduce((acc,product) => {
-                return acc +(product.quantity * product.price) 
-            },0)
-            if(totalOrder < discount_min_order_value) 
-            {
-                throw new BadRequestError('Discount required a minimum price order')
-            }
+        if(!foundDiscount) throw new NotFound('Discount not found')
+        if(foundDiscount.discount_users_used.includes(userId) && 
+        foundDiscount.discount_uses_count >= foundDiscount.discount_max_uses_per_users) throw new BadRequestError('You have used the discount code too many times')
+        const totalOrderValue = products.reduce((total, product) => total + product.price * product.quantity, 0)
+        if(totalOrderValue < foundDiscount.discount_min_order_value) throw new BadRequestError('Order value must be greater or equal ' + foundDiscount.discount_min_order_value)
+            if (foundDiscount.discount_applies_to === 'specific') {
+                const validProductIds = foundDiscount.discount_product_ids;
+                const isValid = products.some((product) =>
+                    validProductIds.includes(product.productId)
+                );
+
+                if (!isValid) {
+                    throw new Error('Mã giảm giá không áp dụng cho sản phẩm này.');
+                }
         }
-        if(discount_max_uses_per_user > 0 ) {
-            const userUserDiscount  = discount_users_used.find(user => user.userId === userId)
-            if(userUserDiscount.discount_users_used > discount.max_uses_per_user) throw new BadRequestError('Over')
-            else {
-                userUserDiscount.discount_users_used+=1
-                
-           }
-            
+        let discountAmount = 0 ;
+        if(foundDiscount.discount_type === 'fixed_amount') {
+            discountAmount = foundDiscount.discount_value
+
         }
-        else {
-            discount_users_used.push({userId})
+        else if(foundDiscount.discount_type === 'percentage') {
+            discountAmount = (totalOrderValue * foundDiscount.discount_value) /100;
         }
-        const amount = discount_type === 'fixed_amount' ? discount_value : totalOrder=(discount_value/100)
+        discountAmount = Math.min(discountAmount,totalOrderValue)
+        foundDiscount.discount_uses_count +=1
+        if(!foundDiscount.discount_users_used.includes(userId)) {
+            foundDiscount.discount_users_used.push(userId)
+        }
+        await foundDiscount.save();
         return {
-            totalOrder,
-            discount:amount,
-            totalPrice:totalOrder - amount
+            discountAmount ,
+            totalOrderValue,
+            finalAmount:totalOrderValue - discountAmount
+
         }
+        
     }
+    
     static async deleteDiscountCode({shopId , codeId}) {
         const deleted = await discount.findOneAndDelete({
             discount_code:codeId,

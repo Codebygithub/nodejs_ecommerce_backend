@@ -43,9 +43,10 @@ class DiscountController {
         }).send(res)
     }
     getDiscountAmount = async(req,res,next)=>{
+        const {code , shopId,userId , products} = req.body
         new Created({
             message: ' Successfully code found',
-            metadata: await DiscountService.getDiscountAmount({...req.body})
+            metadata: await DiscountService.getDiscountAmount({code , shopId, userId, products})
         }).send(res)
     }
     getAllDiscountCodesWithProduct = async(req,res,next)=>{
