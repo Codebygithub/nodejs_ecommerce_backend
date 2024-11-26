@@ -36,6 +36,14 @@ class DiscountController {
             metadata: await DiscountService.deleteDiscountCode({shopId,codeId})
         }).send(res)
     }
+    cancelDiscountCode = async(req,res,next)=>{
+        const {shopId , codeId} = req.body 
+        const {userId} = req.params
+        new Created({
+            message: 'cancel Discount Successfully',
+            metadata: await DiscountService.cancelDiscountCode({shopId,codeId , userId})
+        }).send(res)
+    }
     getAllDiscountCodes = async(req,res,next)=>{
         new Created({
             message: ' Successfully code found',
