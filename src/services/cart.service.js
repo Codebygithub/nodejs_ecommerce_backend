@@ -1,87 +1,105 @@
 'use strict'
-const {cart}= require('../models/cart.model')
+const { NotFound, BadRequestError } = require('../core/error.response');
+const {cart}= require('../models/cart.model');
+const { inventory } = require('../models/inventory.model');
+const {convertoObjectId} = require('../utils')
+const {getProductById} = require('../repository/product_repo')
 
 class CartService {
 
 
-    static async updateCart({ userCart, product }) {
-        try {
-            const products = JSON.parse(userCart.cart_products);
-
-            const productIndex = products.findIndex(
-                (item) => item.productId === product.productId
-            );
-
-            if (productIndex >= 0) {
-                // Nếu sản phẩm đã tồn tại, tăng số lượng
-                products[productIndex].quantity += 1;
-            } else {
-                // Nếu sản phẩm chưa tồn tại, thêm mới
-                products.push({ ...product, quantity: 1 });
+    static async updateCart({ userId, product }) {
+        const {productId , quantity} = product
+        const query = {
+            cart_userId:userId,
+            'cart_products.productId':productId,
+            cart_state:'active'
+        },updateSet = {
+            $inc:{
+                'cart_products.$.quantity':quantity
             }
-
-            // Cập nhật giỏ hàng
-            userCart.cart_products = JSON.stringify(products);
-            userCart.cart_count_product = products.reduce(
-                (count, item) => count + item.quantity,
-                0
-            ); // Tổng số lượng sản phẩm
-            await userCart.save();
-
-            return {
-                success: true,
-                message: 'Cart updated successfully!',
-                cart: userCart,
-            };
-        } catch (error) {
-            console.error('Error in CartService.updateCart:', error);
-            throw new Error('Failed to update cart.');
-        }
+        },options = {upsert:true , new :true}
+        return await cart.findOneAndUpdate(query , updateSet , options)
     }
 
     static async createCart({ userId, product }) {
-        try {
-            const newCart = await cart.create({
-                cart_userId: userId,
-                cart_products: JSON.stringify([{ ...product, quantity: 1 }]), // Sản phẩm đầu tiên
-                cart_count_product: 1, // Số lượng ban đầu
-            });
-
-            return {
-                success: true,
-                message: 'Cart created successfully!',
-                cart: newCart,
-            };
-        } catch (error) {
-            console.error('Error in CartService.createCart:', error);
-            throw new Error('Failed to create cart.');
-        }
-    }
-    static async deleteCart({userId, productId}) {
-        const query = {cart_userId:userId , cart_state :'active'}
-        updateCart = {
-            $pull:{
-                cart_products:{
-                    productId
-                }
+        const query = {cart_userId:userId , cart_state:'active'},
+        updateOrInsert = {
+            $addToSet:{
+                cart_products:product
             }
-        }
-        const deletedCart = await cart.updateOne(query , updateCart)
-        return deletedCart
+        },options = {upsert:true , new:true}
+        return await cart.findOneAndUpdate(query, updateOrInsert,options)
     }
+    // static async deleteCart({userId, productId}) {
+    //     const query = {cart_userId:userId , cart_state :'active'}
+    //     updateCart = {
+    //         $pull:{
+    //             cart_products:{
+    //                 productId
+    //             }
+    //         }
+    //     }
+    //     const deletedCart = await cart.updateOne(query , updateCart)
+    //     return deletedCart
+    // }
 
-    static async addToCart({userId,product = {}}){
-        const foundCart = await cart.findOne({
-            cart_userId:userId
-        })
-        if(!foundCart){
-            return await CartService.createCart({userId,product})
+    // static async addToCart({userId,product = {}}){
+    //     const foundCart = await cart.findOne({
+    //         cart_userId:userId
+    //     })
+    //     if(!foundCart){
+    //         return await CartService.createCart({userId,product})
+    //     }
+    //     if(!foundCart.cart_products.length) {
+    //         foundCart.cart_products =[product]
+    //         return await foundCart.save()
+    //     }
+    //     return await CartService.updateCart({userId,product})
+    // }
+    static async addtoCart({userId ,product = {}}) {
+       const {productId , quantity} = product
+       if (!productId || quantity === undefined) throw new Error('Product ID and quantity are required');
+       const foundInventory = await inventory.findOne({inven_productId :productId})
+       if(!foundInventory) throw new NotFound('Product Inventory not found')
+       if(quantity > 0 && foundInventory.inven_stock < quantity) throw new BadRequestError(`Insufficient stock. Only ${inventory.inven_stock} items are available`)
+       let foundCart = await cart.findOne({cart_userId:userId , cart_state:'active'})
+       if(!foundCart) {
+        foundCart = await this.createCart({userId , product})
+       }
+       if(quantity > 0 ) {
+        const updateCart = await this.updateCart({userId:foundCart , product})
+        if(!updateCart.success) {
+            throw new BadRequestError(updateCart.message)
         }
-        if(!foundCart.cart_products.length) {
-            foundCart.cart_products =[product]
-            return await foundCart.save()
-        }
-        return await CartService.updateCart({userId,product})
+        foundInventory.inven_stock = quantity
+
+       }
+       else if(quantity === 0 ) {
+        await this.deleteItemInCart({userId , productId})
+        const existingInventory = foundCart.cart_count_product.find((p)=>p.productId.toString() === productId)
+        if(existingInventory) foundInventory.inven_stock += existingInventory.quantity
+       }
+       await foundInventory.save()
+       return foundCart;
+
+    }
+   static async deleteItemInCart({ userId, productId }) {
+        const query = { cart_userId: userId, cart_state: 'active' };
+        const updateSet = {
+            $pull: {
+                cart_products: { productId },
+            },
+        };
+
+        const deleteResult = await cart.updateOne(query, updateSet);
+
+        return deleteResult;
+    }
+    static async getListUserCart({userId}) {
+        return await cart.findOne({
+            cart_userId:convertoObjectId(userId)
+        }).lean()
     }
 
 

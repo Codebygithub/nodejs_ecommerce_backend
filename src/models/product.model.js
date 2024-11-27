@@ -2,6 +2,7 @@
 'use strict'
 const slugify = require('slugify')
 const {model , Schema , Types} = require('mongoose')
+const { inventory } = require('./inventory.model')
 
 const DOCUMENT_NAME = 'Product'
 const COLLECTION_NAME = 'Products'
@@ -38,6 +39,18 @@ const ProductSchema = new Schema({
 ProductSchema.index({product_name:'text',product_description:'text'})
 ProductSchema.pre('save', function (next) {
     this.product_slug = slugify(this.product_name ,{lower:true})
+    next();
+})
+ProductSchema.pre('save',async function(next) {
+    if(this.isNew) {
+        const newInventory = new inventory({
+            inven_productId :this._id,
+            inven_stock:this.product_quantity,
+            inven_shopId:this.product_shop,
+            inven_localtion:'unknown'
+        })
+        await newInventory.save()
+    }
     next();
 })
 const clothesSchema = new Schema({

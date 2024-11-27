@@ -1,7 +1,7 @@
 'use-strict'
 const { Types } = require('mongoose')
 const {product , electronic , clothing , funiture} = require('../models/product.model')
-const {getSelectData,unGetSelectData} = require('../utils/index')
+const {getSelectData,unGetSelectData, convertoObjectId} = require('../utils/index')
 const findAllDraftsForShop = async({query , limit , skip}) => {
    return await queryProduct({query, limit,skip})
 }
@@ -67,6 +67,11 @@ const queryProduct = async ({query,limit,skip}) => {
     .lean()
     .exec()
 }
+const getProductById = async (productId) => {
+    return await product.findOne({
+        _id: convertoObjectId(productId)
+    }).lean()
+}
 
 const updateProductById = async({productId,payload,model,isNew = true}) => {
     return await model.findByIdAndUpdate(productId,payload,{
@@ -83,5 +88,6 @@ module.exports ={
     searchProductByUser,
     findAllProduct,
     findProduct,
-    updateProductById
+    updateProductById,
+    getProductById
 }
