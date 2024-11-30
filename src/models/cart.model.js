@@ -9,11 +9,7 @@ const cartSchema = new Schema({
         type:String , required:true , enum:['active','completed' , 'failed' , 'pending'],
         default:'active'
     },
-    cart_products:[{
-        productId:{type:Schema.Types.ObjectId , ref:'Product'},
-        quantity:{type:Number , required:true , default:1}
-        
-    }],
+    cart_products:{type:Array , required:true , default:[]},
     cart_count_product:{type:Number , default: 0 },
     cart_userId:{type:Schema.Types.ObjectId  , required:true }
 },

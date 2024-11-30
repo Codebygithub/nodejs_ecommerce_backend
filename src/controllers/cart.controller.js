@@ -19,45 +19,35 @@ class CartController {
      */
     ///POST
     addToCart= async(req,res,next) =>{
-        const {userId , product} = req.body
         new Created({
             message: 'Create Cart Successfully',
-            metadata: await CartService.addtoCart({
-                userId,product
-            })
+            metadata: await CartService.addtoCart(req.body)
         }).send(res)
 
         
     }
     update= async(req,res,next) =>{
-        const {userId , product} = req.body
         new Created({
             message: 'Update Cart Successfully',
-            metadata: await CartService.updateCartQuantity({
-                userId,product
-            })
+            metadata: await CartService.updateCart(req.body)
         }).send(res)
 
         
     }
     delete= async(req,res,next) =>{
-        const {userId , product} = req.body
         new Created({
             message: 'delete Cart Successfully',
-            metadata: await CartService.deleteItemInCart({
-                userId,product
-            })
+            metadata: await CartService.deleteItemInCart(req.body)
         }).send(res)
 
         
     }
 
     listToCart= async(req,res,next) =>{
-        const userId = req.query.userId
-        if(!userId) throw new NotFound('userId not found')
+      
         new Created({
             message: 'get list Cart Successfully',
-            metadata: await CartService.getListUserCart({userId})
+            metadata: await CartService.getListUserCart(req.query)
         }).send(res)
 
         
