@@ -190,47 +190,87 @@ class DiscountService {
         })
         return discounts
     }
-    static async getDiscountAmount({code , shopId , userId , products = []}) {
-        const foundDiscount = await discount.findOne({
-            discount_code:code,
-            discount_shopId:convertoObjectId(shopId),
-            discount_is_active:true ,
-            discount_start_date:{$lte:new Date()},
-            discount_end_date:{$gte:new Date()},
+    static async getDiscountAmount({codeId , shopId , userId , products = []}) {
+        // const foundDiscount = await discount.findOne({
+        //     discount_code:code,
+        //     discount_shopId:convertoObjectId(shopId),
+        //     discount_is_active:true ,
+        //     discount_start_date:{$lte:new Date()},
+        //     discount_end_date:{$gte:new Date()},
+        // })
+        // if(!foundDiscount) throw new NotFound('Discount not found')
+        // if(foundDiscount.discount_users_used.includes(userId) && 
+        // foundDiscount.discount_uses_count >= foundDiscount.discount_max_uses_per_users) throw new BadRequestError('You have used the discount code too many times')
+        // const totalOrderValue = products.reduce((total, product) => total + product.price * product.quantity, 0)
+        // if(totalOrderValue < foundDiscount.discount_min_order_value) throw new BadRequestError('Order value must be greater or equal ' + foundDiscount.discount_min_order_value)
+        //     if (foundDiscount.discount_applies_to === 'specific') {
+        //         const validProductIds = foundDiscount.discount_product_ids;
+        //         const isValid = products.some((product) =>
+        //             validProductIds.includes(product.productId)
+        //         );
+
+        //         if (!isValid) {
+        //             throw new Error('Mã giảm giá không áp dụng cho sản phẩm này.');
+        //         }
+        // }
+        // let discountAmount = 0 ;
+        // if(foundDiscount.discount_type === 'fixed_amount') {
+        //     discountAmount = foundDiscount.discount_value
+
+        // }
+        // else if(foundDiscount.discount_type === 'percentage') {
+        //     discountAmount = (totalOrderValue * foundDiscount.discount_value) /100;
+        // }
+        // discountAmount = Math.min(discountAmount,totalOrderValue)
+        // foundDiscount.discount_uses_count +=1
+        // if(!foundDiscount.discount_users_used.includes(userId)) {
+        //     foundDiscount.discount_users_used.push(userId)
+        // }
+        // await foundDiscount.save();
+        // return {
+        //     discountAmount ,
+        //     totalOrderValue,
+        //     finalAmount:totalOrderValue - discountAmount
+
+        // }
+
+        const foundDiscount = await checkDiscountExists({
+            model:discount,
+            filter:{
+                discount_code:codeId ,
+                discount_shopId:convertoObjectId(shopId)
+            }
         })
-        if(!foundDiscount) throw new NotFound('Discount not found')
-        if(foundDiscount.discount_users_used.includes(userId) && 
-        foundDiscount.discount_uses_count >= foundDiscount.discount_max_uses_per_users) throw new BadRequestError('You have used the discount code too many times')
-        const totalOrderValue = products.reduce((total, product) => total + product.price * product.quantity, 0)
-        if(totalOrderValue < foundDiscount.discount_min_order_value) throw new BadRequestError('Order value must be greater or equal ' + foundDiscount.discount_min_order_value)
-            if (foundDiscount.discount_applies_to === 'specific') {
-                const validProductIds = foundDiscount.discount_product_ids;
-                const isValid = products.some((product) =>
-                    validProductIds.includes(product.productId)
-                );
-
-                if (!isValid) {
-                    throw new Error('Mã giảm giá không áp dụng cho sản phẩm này.');
-                }
-        }
-        let discountAmount = 0 ;
-        if(foundDiscount.discount_type === 'fixed_amount') {
-            discountAmount = foundDiscount.discount_value
-
-        }
-        else if(foundDiscount.discount_type === 'percentage') {
-            discountAmount = (totalOrderValue * foundDiscount.discount_value) /100;
-        }
-        discountAmount = Math.min(discountAmount,totalOrderValue)
-        foundDiscount.discount_uses_count +=1
-        if(!foundDiscount.discount_users_used.includes(userId)) {
-            foundDiscount.discount_users_used.push(userId)
-        }
-        await foundDiscount.save();
-        return {
-            discountAmount ,
-            totalOrderValue,
-            finalAmount:totalOrderValue - discountAmount
+        if(!foundDiscount) throw new NotFound('discount do not exist')
+        const {
+        discount_is_active ,
+        discount_max_uses,
+        discount_min_order_value,
+        discount_users_used,
+        discount_value,
+        discount_start_date,
+        discount_type,
+        discount_max_uses_per_user,
+        discount_end_date
+        }= foundDiscount 
+        if(!discount_is_active) throw new NotFound('discount expected active')
+        if(!discount_max_uses) throw new NotFound('discount expected max')
+        let totalOrder =  0 ;
+        if(discount_min_order_value > 0) {
+            totalOrder = products.reduce((acc,product)=> {
+                return acc +(product.quantity * product.price)
+            },0)
+            if(totalOrder<discount_min_order_value) throw new NotFound(`Discount requires a minimum order value of ${discount_min_order_value}`)
+            if(discount_max_uses_per_user > 0 ) {
+                const userUserDiscount = discount_users_used.find(user => user.userId === userId)
+                
+            }
+            const amount = discount_type === 'fixed_amount' ? discount_value : totalOrder * ( discount_value/100)
+            return {
+                totalOrder,
+                discount :amount ,
+                totalPrice:totalOrder - amount
+            }
 
         }
         

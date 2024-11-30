@@ -19,7 +19,7 @@ class CheckoutController {
      */
     ///POST
     checkoutReview= async(req,res,next) =>{
-        const {userId , product} = req.body
+        
         new Created({
             message: 'Create Cart Successfully',
             metadata: await CheckService.checkoutReview(req.body)

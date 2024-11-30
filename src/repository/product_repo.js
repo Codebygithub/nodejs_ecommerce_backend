@@ -79,24 +79,20 @@ const updateProductById = async({productId,payload,model,isNew = true}) => {
     })
 }
 const checkProductByServer = async (products) => {
-    if (!Array.isArray(products)) {
-        throw new Error('Products must be an array');
-    }
-
-    return await Promise.all(
-        products.map(async (product) => {
-            const foundProduct = await getProductById(product.productId);
-            if (foundProduct) {
-                return {
-                    price: foundProduct.product_price,
-                    quantity: product.quantity,
-                    productId: product.productId
-                };
+   return await Promise.all(products.map(async product => {
+        const foundProduct = await getProductById(product.productId)
+        if(foundProduct) {
+            return {
+                price:foundProduct.product_price,
+                quantity:product.quantity,
+                productId:product.productId
             }
-            return null; // Hoặc bỏ qua sản phẩm
-        })
-    ).then(results => results.filter(product => product !== null));
+
+        }
+   }))
 };
+
+
 
 
 
