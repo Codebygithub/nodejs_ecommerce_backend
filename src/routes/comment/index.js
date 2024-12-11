@@ -13,7 +13,10 @@ const router = express.Router()
 
 //AUTHENTICATION
 router.use(authentication)
-router.post('',asyncHandler(CommentController.createComment))
+router.post('/create',asyncHandler(CommentController.createComment))
+router.post('',asyncHandler(CommentController.deleteComments))
+router.get('',asyncHandler(CommentController.getCommentByParentId))
+
 
 
 module.exports = router
